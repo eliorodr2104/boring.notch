@@ -468,6 +468,7 @@ struct HUD: View {
     @Default(.enableGradient) var enableGradient
     @Default(.optionKeyAction) var optionKeyAction
     @Default(.hudReplacement) var hudReplacement
+    @Default(.showOpenNotchHUD) var hudOnOpenNotch
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @State private var accessibilityAuthorized = false
     
@@ -478,16 +479,18 @@ struct HUD: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Replace system HUD")
                             .font(.headline)
+                        
                         Text("Replaces the standard macOS volume, display brightness, and keyboard brightness HUDs with a custom design.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
+                    
                     Spacer(minLength: 40)
+                                        
                     Defaults.Toggle("", key: .hudReplacement)
                     .labelsHidden()
                     .toggleStyle(.switch)
-                    .controlSize(.large)
                     .disabled(!accessibilityAuthorized)
                 }
                 
@@ -521,12 +524,15 @@ struct HUD: View {
                     Text("Gradient")
                         .tag(true)
                 }
+                
                 Defaults.Toggle(key: .systemEventIndicatorShadow) {
                     Text("Enable glowing effect")
                 }
+                
                 Defaults.Toggle(key: .systemEventIndicatorUseAccent) {
                     Text("Tint progress bar with accent color")
                 }
+                
             } header: {
                 Text("General")
             }
@@ -536,10 +542,12 @@ struct HUD: View {
                 Defaults.Toggle(key: .showOpenNotchHUD) {
                     Text("Show HUD in open notch")
                 }
+                
                 Defaults.Toggle(key: .showOpenNotchHUDPercentage) {
                     Text("Show percentage")
                 }
-                .disabled(!Defaults[.showOpenNotchHUD])
+                .disabled(!self.hudOnOpenNotch)
+                
             } header: {
                 HStack {
                     Text("Open Notch")
@@ -549,10 +557,11 @@ struct HUD: View {
             .disabled(!hudReplacement)
             
             Section {
-                Picker("HUD style", selection: $inlineHUD) {
+                Picker("Style", selection: $inlineHUD) {
                     Text("Default")
                         .tag(false)
-                    Text("Inline")
+                    
+                    Text("Compact")
                         .tag(true)
                 }
                 .onChange(of: Defaults[.inlineHUD]) {
@@ -567,10 +576,21 @@ struct HUD: View {
                 Defaults.Toggle(key: .showClosedNotchHUDPercentage) {
                     Text("Show percentage")
                 }
+                
+                Defaults.Toggle(key: .showClosedInlineHUDProgressBar) {
+                    Text("Show progress bar")
+                }
+                
+                Defaults.Toggle(key: .showClosedInlineHUDDescriptiveText) {
+                    Text("Show text")
+                }
+                
             } header: {
                 Text("Closed Notch")
+                
             }
             .disabled(!Defaults[.hudReplacement])
+            
         }
         .accentColor(.effectiveAccent)
         .navigationTitle("HUDs")
@@ -592,14 +612,26 @@ struct HUD: View {
 }
 
 struct Media: View {
-    @Default(.waitInterval) var waitInterval
-    @Default(.mediaController) var mediaController
     @ObservedObject var coordinator = BoringViewCoordinator.shared
-    @Default(.hideNotchOption) var hideNotchOption
-    @Default(.enableSneakPeek) private var enableSneakPeek
-    @Default(.sneakPeekStyles) var sneakPeekStyles
-
-    @Default(.enableLyrics) var enableLyrics
+    
+    @Default(.waitInterval)
+    var waitInterval
+    
+    @Default(.mediaController)
+    var mediaController
+    
+    @Default(.hideNotchOption)
+    var hideNotchOption
+    
+    @Default(.sneakPeekStyles)
+    var sneakPeekStyles
+    
+    @Default(.enableLyrics)
+    var enableLyrics
+    
+    @Default(.enableSneakPeek)
+    private var enableSneakPeek
+    
 
     var body: some View {
         Form {
@@ -617,6 +649,7 @@ struct Media: View {
                 }
             } header: {
                 Text("Media Source")
+                
             } footer: {
                 if MusicManager.shared.isNowPlayingDeprecated {
                     HStack {
@@ -630,6 +663,7 @@ struct Media: View {
                         .font(.caption)
                         .foregroundColor(.blue)  // Ensures it's visibly a link
                     }
+                    
                 } else {
                     Text(
                         "'Now Playing' was the only option on previous versions and works with all media apps."

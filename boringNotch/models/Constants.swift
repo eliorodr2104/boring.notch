@@ -159,6 +159,18 @@ extension Defaults.Keys {
     static let showOpenNotchHUD = Key<Bool>("showOpenNotchHUD", default: true)
     static let showOpenNotchHUDPercentage = Key<Bool>("showOpenNotchHUDPercentage", default: true)
     static let showClosedNotchHUDPercentage = Key<Bool>("showClosedNotchHUDPercentage", default: false)
+    
+    // Descriptive text
+    static let showClosedInlineHUDDescriptiveText = Key<Bool>(
+        "showClosedInlineHUDDescriptiveText",
+        default: false
+    )
+    
+    static let showClosedInlineHUDProgressBar = Key<Bool>(
+        "showClosedInlineHUDProgressBar",
+        default: false
+    )
+    
     // Option key modifier behaviour for media keys
     static let optionKeyAction = Key<OptionKeyAction>("optionKeyAction", default: OptionKeyAction.openSettings)
     

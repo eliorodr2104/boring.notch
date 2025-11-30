@@ -24,9 +24,10 @@ public enum NotchState {
     case open
 }
 
-public enum NotchViews {
-    case home
-    case shelf
+public enum NotchViews: String, CaseIterable {
+    case home     = "house.fill"
+    case calendar = "calendar"
+    case shelf    = "tray.fill"
 }
 
 enum SettingsEnum {

@@ -20,26 +20,31 @@ struct OpenNotchHUD: View {
             // Icon
             Group {
                 switch type {
-                case .volume:
-                    if icon.isEmpty {
-                        Image(systemName: SpeakerSymbol(value))
+                    case .volume:
+                        if icon.isEmpty {
+                            Image(systemName: SpeakerSymbol(value))
+                                .contentTransition(.interpolate)
+                            
+                        } else {
+                            Image(systemName: icon)
+                                .contentTransition(.interpolate)
+                        }
+                        
+                    case .brightness:
+                        Image(systemName: "sun.max.fill")
+                            .contentTransition(.symbolEffect)
+                        
+                    case .backlight:
+                        Image(systemName: value > 0.5 ? "light.max" : "light.min")
                             .contentTransition(.interpolate)
-                    } else {
-                        Image(systemName: icon)
+                        
+                    case .mic:
+                        Image(systemName: "mic")
+                            .symbolVariant(value > 0 ? .none : .slash)
                             .contentTransition(.interpolate)
-                    }
-                case .brightness:
-                    Image(systemName: "sun.max.fill")
-                        .contentTransition(.symbolEffect)
-                case .backlight:
-                    Image(systemName: value > 0.5 ? "light.max" : "light.min")
-                        .contentTransition(.interpolate)
-                case .mic:
-                    Image(systemName: "mic")
-                        .symbolVariant(value > 0 ? .none : .slash)
-                        .contentTransition(.interpolate)
-                default:
-                    EmptyView()
+                        
+                    default:
+                        EmptyView()
                 }
             }
             .font(.system(size: 14, weight: .medium))
@@ -52,6 +57,7 @@ struct OpenNotchHUD: View {
                      updateSystemValue(newVal)
                 })
                 .frame(width: showPercentage ? 65 : 108) // Fixed width for consistency
+                
             } else {
                 Text(value > 0 ? "Unmuted" : "Muted")
                     .font(.system(size: 13, weight: .medium))
@@ -88,12 +94,14 @@ struct OpenNotchHUD: View {
     
     func updateSystemValue(_ newVal: CGFloat) {
         switch type {
-        case .volume:
-            VolumeManager.shared.setAbsolute(Float32(newVal))
-        case .brightness:
-            BrightnessManager.shared.setAbsolute(value: Float32(newVal))
-        default:
-            break
+            case .volume:
+                VolumeManager.shared.setAbsolute(Float32(newVal))
+            
+            case .brightness:
+                BrightnessManager.shared.setAbsolute(value: Float32(newVal))
+            
+            default:
+                break
         }
     }
 }

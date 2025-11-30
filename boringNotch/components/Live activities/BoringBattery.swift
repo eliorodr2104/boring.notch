@@ -11,15 +11,15 @@ struct BatteryView: View {
     var batteryWidth: CGFloat = 26
     var isForNotification: Bool
 
-    var icon: String = "battery.0"
+    let icon: String = "battery.0"
 
     /// Determines the icon to display when charging.
     var iconStatus: String {
         if isCharging {
-            return "bolt"
+            return "plug.fill"
         }
         else if isPluggedIn {
-            return "plug"
+            return "bolt.fill"
         }
         else {
             return ""
@@ -30,12 +30,16 @@ struct BatteryView: View {
     var batteryColor: Color {
         if isInLowPowerMode {
             return .yellow
+            
         } else if levelBattery <= 20 && !isCharging && !isPluggedIn {
             return .red
+            
         } else if isCharging || isPluggedIn || levelBattery == 100 {
             return .green
+            
         } else {
             return .white
+            
         }
     }
 
@@ -61,7 +65,7 @@ struct BatteryView: View {
 
             if iconStatus != "" && (isForNotification || Defaults[.showPowerStatusIcons]) {
                 ZStack {
-                    Image(iconStatus)
+                    Image(systemName: iconStatus)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .foregroundColor(.white)

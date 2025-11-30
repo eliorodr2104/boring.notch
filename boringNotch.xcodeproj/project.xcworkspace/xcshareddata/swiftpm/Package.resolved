@@ -1,5 +1,5 @@
 {
-  "originHash" : "ab961f5de25797b1a82bd0f8c39b561332a3dfe10de0a118e1252262fbd45864",
+  "originHash" : "113769f521d4a302ed93e6fd32c31bd9bebd30fd851ad394856a23141de010ef",
   "pins" : [
     {
       "identity" : "asyncxpcconnection",
@@ -98,6 +98,15 @@
       "state" : {
         "revision" : "4799286537280063c85a32f09884cfbca301b1a1",
         "version" : "602.0.0"
+      }
+    },
+    {
+      "identity" : "swiftflowpicker",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Hylo-dev/SwiftFlowPicker.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "4940bb54e64c9bc5da04c88f06fdb09dc8e6f181"
       }
     },
     {

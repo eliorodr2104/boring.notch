@@ -59,6 +59,7 @@ struct AlbumArtView: View {
         ZStack {
             Button {
                 musicManager.openMusicApp()
+                
             } label: {
                 ZStack(alignment:.bottomTrailing) {
                     albumArtImage
@@ -111,8 +112,8 @@ struct AlbumArtView: View {
 
 struct MusicControlsView: View {
     @ObservedObject var musicManager = MusicManager.shared
-        @EnvironmentObject var vm: BoringViewModel
-        @ObservedObject var webcamManager = WebcamManager.shared
+    @EnvironmentObject var vm: BoringViewModel
+    @ObservedObject var webcamManager = WebcamManager.shared
     @State private var sliderValue: Double = 0
     @State private var dragging: Bool = false
     @State private var lastDragged: Date = .distantPast

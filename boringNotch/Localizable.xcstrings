@@ -5902,6 +5902,9 @@
         }
       }
     },
+    "Compact" : {
+
+    },
     "Continue" : {
       "localizations" : {
         "ar" : {
@@ -11409,6 +11412,7 @@
       }
     },
     "HUD style" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -11709,6 +11713,7 @@
       }
     },
     "Inline" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -20012,6 +20017,9 @@
         }
       }
     },
+    "Show progress bar" : {
+
+    },
     "Show settings icon in notch" : {
       "localizations" : {
         "ar" : {
@@ -20211,6 +20219,9 @@
           }
         }
       }
+    },
+    "Show text" : {
+
     },
     "Slider color" : {
       "localizations" : {
@@ -20912,6 +20923,9 @@
           }
         }
       }
+    },
+    "Style" : {
+
     },
     "Support Us" : {
       "extractionState" : "stale",

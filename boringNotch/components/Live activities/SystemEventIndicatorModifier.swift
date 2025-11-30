@@ -32,6 +32,7 @@ struct SystemEventIndicatorModifier: View {
                             .contentTransition(.interpolate)
                             .symbolVariant(value > 0 ? .none : .slash)
                             .frame(width: 20, height: 15, alignment: .leading)
+                        
                     } else {
                         Image(systemName: icon)
                             .contentTransition(.interpolate)
@@ -39,34 +40,46 @@ struct SystemEventIndicatorModifier: View {
                             .scaleEffect(value.isZero ? 0.85 : 1)
                             .frame(width: 20, height: 15, alignment: .leading)
                     }
+                
                 case .brightness:
                     Image(systemName: "sun.max.fill")
                         .contentTransition(.symbolEffect)
                         .frame(width: 20, height: 15)
                         .foregroundStyle(.white)
+                
                 case .backlight:
                     Image(systemName: value > 0.5 ? "light.max" : "light.min")
                         .contentTransition(.interpolate)
                         .frame(width: 20, height: 15)
                         .foregroundStyle(.white)
+                
                 case .mic:
                     Image(systemName: "mic")
                         .symbolVariant(value > 0 ? .none : .slash)
                         .contentTransition(.interpolate)
                         .frame(width: 20, height: 15)
                         .foregroundStyle(.white)
+                
                 default:
                     EmptyView()
             }
+            
             if (eventType != .mic) {
-                DraggableProgressBar(value: $value)
+                
+                if Defaults[.showClosedInlineHUDProgressBar] {
+                    DraggableProgressBar(value: $value)
+                    
+                } else { Spacer() }
+                
                 if Defaults[.showClosedNotchHUDPercentage] {
                     Text("\(Int(value * 100))%")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.white)
                         .monospacedDigit()
                         .frame(width: 35, alignment: .trailing)
+                        .contentTransition(.numericText())
                 }
+                
             } else {
                 Text("Mic \(value > 0 ? "unmuted" : "muted")")
                     .foregroundStyle(.gray)

@@ -7,22 +7,41 @@
 
 import Defaults
 import SwiftUI
+import SegmentedFlowPicker
 
 struct BoringHeader: View {
-    @EnvironmentObject var vm: BoringViewModel
-    @ObservedObject var batteryModel = BatteryStatusViewModel.shared
-    @ObservedObject var coordinator = BoringViewCoordinator.shared
-    @StateObject var tvm = ShelfStateViewModel.shared
+    @EnvironmentObject
+    var vm: BoringViewModel
+    
+    @ObservedObject
+    var batteryModel = BatteryStatusViewModel.shared
+    
+    @ObservedObject
+    var coordinator = BoringViewCoordinator.shared
+    
+    @StateObject
+    var tvm = ShelfStateViewModel.shared
+    
     var body: some View {
         HStack(spacing: 0) {
             HStack {
                 if (!tvm.isEmpty || coordinator.alwaysShowTabs) && Defaults[.boringShelf] {
-                    TabSelectionView()
+                    // Deprecated -> TabSelectionView()
+                    
+                    SegmentedFlowPicker(
+                        selectedSection: $coordinator.currentView
+                        
+                    ) { section in Image(systemName: section.rawValue) }
+                    .backgroundColor(.clear)
+                    .buttonFocusedColor(.effectiveAccent)
+                    
                 } else if vm.notchState == .open {
                     EmptyView()
                 }
+                
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 5)
             .opacity(vm.notchState == .closed ? 0 : 1)
             .blur(radius: vm.notchState == .closed ? 20 : 0)
             .zIndex(2)

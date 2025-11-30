@@ -9,15 +9,34 @@ import SwiftUI
 import Defaults
 
 struct InlineHUD: View {
-    @EnvironmentObject var vm: BoringViewModel
-    @Binding var type: SneakContentType
-    @Binding var value: CGFloat
-    @Binding var icon: String
-    @Binding var hoverAnimation: Bool
-    @Binding var gestureProgress: CGFloat
+    @EnvironmentObject
+    var vm: BoringViewModel
+    
+    @Binding
+    var type: SneakContentType
+    
+    @Binding
+    var value: CGFloat
+    
+    @Binding
+    var icon: String
+    
+    @Binding
+    var hoverAnimation: Bool
+    
+    @Binding
+    var gestureProgress: CGFloat
+    
+    let isDescriptiveText = Defaults[.showClosedInlineHUDDescriptiveText]
+    let isProgressBar = Defaults[.showClosedInlineHUDProgressBar]
+    
     var body: some View {
+        
         HStack {
+            let size: CGFloat = self.isDescriptiveText || self.isProgressBar ? 100 : 50
+            
             HStack(spacing: 5) {
+                
                 Group {
                     switch (type) {
                         case .volume:
@@ -26,6 +45,7 @@ struct InlineHUD: View {
                                     .contentTransition(.interpolate)
                                     .symbolVariant(value > 0 ? .none : .slash)
                                     .frame(width: 20, height: 15, alignment: .leading)
+                                
                             } else {
                                 Image(systemName: icon)
                                     .contentTransition(.interpolate)
@@ -33,20 +53,24 @@ struct InlineHUD: View {
                                     .scaleEffect(value.isZero ? 0.85 : 1)
                                     .frame(width: 20, height: 15, alignment: .leading)
                             }
+                        
                         case .brightness:
                             Image(systemName: BrightnessSymbol(value))
                                 .contentTransition(.interpolate)
                                 .frame(width: 20, height: 15, alignment: .center)
+                        
                         case .backlight:
                             Image(systemName: value > 0.5 ? "light.max" : "light.min")
                                 .contentTransition(.interpolate)
                                 .frame(width: 20, height: 15, alignment: .center)
+                        
                         case .mic:
                             Image(systemName: "mic")
                                 .symbolRenderingMode(.hierarchical)
                                 .symbolVariant(value > 0 ? .none : .slash)
                                 .contentTransition(.interpolate)
                                 .frame(width: 20, height: 15, alignment: .center)
+                        
                         default:
                             EmptyView()
                     }
@@ -54,19 +78,27 @@ struct InlineHUD: View {
                 .foregroundStyle(.white)
                 .symbolVariant(.fill)
                 
-                Text(Type2Name(type))
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .lineLimit(1)
-                    .allowsTightening(true)
-                    .contentTransition(.numericText())
+                if Defaults[.showClosedInlineHUDDescriptiveText] {
+                    Text(Type2Name(type))
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .lineLimit(1)
+                        .allowsTightening(true)
+                        .contentTransition(.numericText())
+                    
+                }
             }
-            .frame(width: 100 - (hoverAnimation ? 0 : 12) + gestureProgress / 2, height: vm.notchSize.height - (hoverAnimation ? 0 : 12), alignment: .leading)
+            .frame(
+                width: size - (hoverAnimation ? 0 : 12) + gestureProgress / 2,
+                height: vm.notchSize.height - (hoverAnimation ? 0 : 12),
+                alignment: Defaults[.showClosedInlineHUDDescriptiveText] ? .leading : .center
+            )
             
             Rectangle()
                 .fill(.black)
-                .frame(width: vm.closedNotchSize.width - 20)
+                .frame(width: vm.closedNotchSize.width - 20 )
             
+
             HStack {
                 if (type == .mic) {
                     Text(value.isZero ? "muted" : "unmuted")
@@ -76,39 +108,60 @@ struct InlineHUD: View {
                         .multilineTextAlignment(.trailing)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .contentTransition(.interpolate)
+                    
                 } else {
                         HStack {
-                        DraggableProgressBar(value: $value, onChange: { v in
-                            if type == .volume {
-                                VolumeManager.shared.setAbsolute(Float32(v))
-                            } else if type == .brightness {
-                                BrightnessManager.shared.setAbsolute(value: Float32(v))
+                            
+                            if Defaults[.showClosedInlineHUDProgressBar] {
+                                DraggableProgressBar(value: $value, onChange: { v in
+                                    if type == .volume {
+                                        VolumeManager.shared.setAbsolute(Float32(v))
+                                        
+                                    } else if type == .brightness {
+                                        BrightnessManager.shared.setAbsolute(value: Float32(v))
+                                        
+                                    }
+                                })
                             }
-                        })
-                        if (type == .volume && value.isZero) {
-                            Text("muted")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundStyle(.gray)
-                                .lineLimit(1)
-                                .allowsTightening(true)
-                                .multilineTextAlignment(.trailing)
-                        } else if Defaults[.showClosedNotchHUDPercentage] {
-                            Text("\(Int(value * 100))%")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundStyle(.gray)
-                                .lineLimit(1)
-                                .allowsTightening(true)
-                                .multilineTextAlignment(.trailing)
-                        }
+                            
+                            if type == .volume &&
+                                value.isZero &&
+                                Defaults[.showClosedInlineHUDDescriptiveText]
+                            {
+                                Text("muted")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(.gray)
+                                    .lineLimit(1)
+                                    .allowsTightening(true)
+                                    .multilineTextAlignment(.trailing)
+                                
+                            } else if Defaults[.showClosedNotchHUDPercentage] {
+                                Text("\(Int(value * 100))%")
+                                    .font(.caption)
+                                    .fontDesign(.monospaced)
+                                    .foregroundStyle(
+                                        size == 100 ? .secondary : .primary
+                                    )
+                                    .lineLimit(1)
+                                    .allowsTightening(true)
+                                    .multilineTextAlignment(.trailing)
+                                    .contentTransition(.numericText())
+                            }
                     }
                 }
             }
-            .padding(.trailing, 4)
-            .frame(width: 100 - (hoverAnimation ? 0 : 12) + gestureProgress / 2, height: vm.closedNotchSize.height - (hoverAnimation ? 0 : 12), alignment: .center)
+            .padding(.horizontal, size == 100 ? 6 : 4)
+            .frame(
+                width: size - (hoverAnimation ? 0 : 12) + gestureProgress / 2,
+                height: vm.closedNotchSize.height - (hoverAnimation ? 0 : 12),
+                alignment: .center
+            )
         }
-        .frame(height: vm.closedNotchSize.height + (hoverAnimation ? 8 : 0), alignment: .center)
+        .frame(
+            height: vm.closedNotchSize.height + (hoverAnimation ? 8 : 0),
+            alignment: .center
+        )
     }
     
     func SpeakerSymbol(_ value: CGFloat) -> String {
