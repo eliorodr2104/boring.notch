@@ -10,7 +10,8 @@ import Defaults
 import SwiftUI
 
 class BoringViewModel: NSObject, ObservableObject {
-    @ObservedObject var coordinator = BoringViewCoordinator.shared
+    var coordinator = BoringViewCoordinator.shared
+    
     @ObservedObject var detector = FullscreenMediaDetector.shared
 
     let animationLibrary: BoringAnimations = .init()
@@ -49,14 +50,15 @@ class BoringViewModel: NSObject, ObservableObject {
     // MARK: - Computed variables
     
     var currentContentState: NotchContentState {
-        if BoringViewCoordinator.shared.helloAnimationRunning { return .hello }
+        if self.coordinator.helloAnimationRunning { return .hello }
             
         // Logica per determinare cosa mostrare quando è chiuso
-        if notchState == .closed {
-            if isBatteryNotificationActive { return .battery }
-            if isInlineHUDActive { return .inlineHUD }
-            if isMusicLiveActivityActive { return .music }
-            if isBoringFaceActive { return .boringFace }
+        if self.notchState == .closed {
+            if isBatteryNotificationActive { return .battery    }
+            if isInlineHUDActive           { return .inlineHUD  }
+            if isMusicLiveActivityActive   { return .music      }
+            if isBoringFaceActive          { return .boringFace }
+            if isHeadphonesStatusActive    { return .headphones }
             
             return .empty
         }
@@ -90,36 +92,33 @@ class BoringViewModel: NSObject, ObservableObject {
     }
         
     private var isInlineHUDActive: Bool {
-        let coordinator = BoringViewCoordinator.shared
+        
         return coordinator.sneakPeek.isShow &&
         Defaults[.inlineHUD] &&
         coordinator.sneakPeek.type != .music &&
         coordinator.sneakPeek.type != .battery &&
+        coordinator.sneakPeek.type != .headphones &&
         notchState == .closed
+    }
+    
+    private var isHeadphonesStatusActive: Bool {
+        return coordinator.sneakPeek.isShow &&
+                coordinator.sneakPeek.type == .headphones &&
+                notchState == .closed
     }
         
     private var isMusicLiveActivityActive: Bool {
-        let coordinator = BoringViewCoordinator.shared
         let musicManager = MusicManager.shared
-        
-        if hideOnClosed {
-            self.coordinator.toggleExpandingView(
-                status: false,
-                type: .unknown
-            )
-            return false
-        }
             
         return (
             !coordinator.expandingView.isShow ||
              coordinator.expandingView.type == .music
         ) && notchState == .closed &&
         (musicManager.isPlaying || !musicManager.isPlayerIdle) &&
-        coordinator.musicLiveActivityEnabled
+        coordinator.musicLiveActivityEnabled && !hideOnClosed
     }
         
     private var isBoringFaceActive: Bool {
-        let coordinator = BoringViewCoordinator.shared
         let musicManager = MusicManager.shared
             
         return !coordinator.expandingView.isShow &&

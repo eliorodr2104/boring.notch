@@ -9,6 +9,7 @@ enum NotchContentState {
     case hello
     case battery
     case inlineHUD
+    case headphones
     case music
     case boringFace
     case open

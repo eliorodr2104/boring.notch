@@ -12,9 +12,6 @@ struct NotchContentRouter: View {
     @EnvironmentObject
     private var viewModel: BoringViewModel
     
-    @ObservedObject
-    private var coordinator = BoringViewCoordinator.shared
-    
     @Binding
     var isHovering: Bool
     
@@ -22,34 +19,50 @@ struct NotchContentRouter: View {
     var gestureProgress: CGFloat
     
     var body: some View {
-        switch viewModel.currentContentState {
+        ZStack {
+            switch self.viewModel.currentContentState {
+                
+                case .hello:
+                    HelloAnimationView()
+                    .transition(.opacity)
+                    
+                case .battery:
+                    BatteryStatusView()
+                    .transition(.opacity)
+                    
+                case .inlineHUD:
+                    InlineHUDView(
+                        isHovering: self.$isHovering,
+                        gestureProgress: self.$gestureProgress
+                    )
+                    .transition(.expandHorizontally)
+                    .zIndex(1)
+                
+                case .headphones:
+                    HeadphoneStatusView()
+                    .transition(.opacity)
+                    
+                case .music:
+                    MusicLiveActivityView()
+                    .transition(.opacity)
+                    
+                case .boringFace:
+                    BoringFaceView()
+                    .transition(.opacity)
+                    
+                case .open:
+                    BoringHeaderView()
+                        .frame(height: max(24, viewModel.effectiveClosedNotchHeight))
+                        .transition(.opacity)
+                    
+                case .empty:
+                    Rectangle()
+                    .fill(.clear)
+                    .frame(width: viewModel.closedNotchSize.width - 20, height: viewModel.effectiveClosedNotchHeight)
+                    .transition(.identity)
             
-            case .hello:
-                HelloAnimationView()
-                
-            case .battery:
-                BatteryStatusView()
-                
-            case .inlineHUD:
-                InlineHUDView(
-                    isHovering: self.$isHovering,
-                    gestureProgress: self.$gestureProgress
-                )
-                
-            case .music:
-                MusicLiveActivityView()
-                
-            case .boringFace:
-                BoringFaceView()
-                
-            case .open:
-                BoringHeaderView()
-                    .frame(height: max(24, viewModel.effectiveClosedNotchHeight))
-                
-            case .empty:
-                Rectangle()
-                .fill(.clear)
-                .frame(width: viewModel.closedNotchSize.width - 20, height: viewModel.effectiveClosedNotchHeight)
+            }
         }
+        .animation(.spring(response: 0.5, dampingFraction: 0.7), value: viewModel.currentContentState)
     }
 }

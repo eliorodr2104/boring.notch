@@ -10,6 +10,8 @@ import Combine
 import CoreAudio
 import Foundation
 
+import SwiftUI
+
 final class VolumeManager: NSObject, ObservableObject {
     static let shared = VolumeManager()
 
@@ -34,12 +36,14 @@ final class VolumeManager: NSObject, ObservableObject {
     var shouldShowOverlay: Bool { Date().timeIntervalSince(lastChangeAt) < visibleDuration }
 
     // MARK: - Public Control API
-    @MainActor func increase(stepDivisor: Float = 1.0) {
+    @MainActor
+    func increase(stepDivisor: Float = 1.0) {
         let divisor = max(stepDivisor, 0.25)
         let delta = step / Float32(divisor)
         let current = readVolumeInternal() ?? rawVolume
         let target = max(0, min(1, current + delta))
         setAbsolute(target)
+        
         BoringViewCoordinator.shared.toggleSneakPeek(
             type: .volume,
             show: true,

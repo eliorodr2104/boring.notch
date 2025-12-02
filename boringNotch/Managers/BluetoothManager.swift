@@ -63,43 +63,51 @@ class BluetoothManager: ObservableObject {
     }
     
     private func checkCurrentOutputDevice() {
-        let currentDeviceID = systemOutputDeviceID()
         
-        // Evitiamo refresh inutili se il device è lo stesso
-        guard currentDeviceID != lastDeviceID else { return }
-        lastDeviceID = currentDeviceID
-        
-        // 1. Controlliamo se è Bluetooth
-        guard isBluetoothDevice(deviceID: currentDeviceID) else {
-            DispatchQueue.main.async {
-                self.currentHeadphone = nil
-                self.isHeadphoneConnected = false
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self else { return }
+                
+            let currentDeviceID = self.systemOutputDeviceID()
+            self.lastDeviceID = currentDeviceID
+                
+            // 1. Controllo Transport Type
+            guard self.isBluetoothDevice(deviceID: currentDeviceID) else {
+                Task { @MainActor in
+                    if self.currentHeadphone != nil {
+                        self.currentHeadphone = nil
+                        self.isHeadphoneConnected = false
+                        print("Disconnected")
+                    }
+                }
+                return
             }
-            return
-        }
-        
-        // 2. Otteniamo il nome dal CoreAudio
-        let deviceName = getAudioDeviceName(deviceID: currentDeviceID) ?? "Bluetooth Audio"
-        
-        // 3. Cerchiamo info extra (Batteria) via IOBluetooth
-        // Nota: CoreAudio ci dà l'audio, IOBluetooth ci dà la batteria. Dobbiamo abbinarli per nome/mac address.
-        let battery = fetchBatteryLevel(deviceName: deviceName)
-        
-        let headphone = ConnectedHeadphone(
-            name: deviceName,
-            batteryLevel: battery,
-            isApple: deviceName.lowercased().contains("airpods") || deviceName.lowercased().contains("beats")
-        )
-        
-        // 4. Pubblichiamo il risultato
-        Task { @MainActor in
-            self.currentHeadphone = headphone
-            self.isHeadphoneConnected = true
+                
+            // 2. Nome
+            let deviceName = self.getAudioDeviceName(deviceID: currentDeviceID) ?? "Bluetooth Audio"
+                
+            // 3. Batteria (Ora questa chiamata pesante avviene in .utility e non blocca)
+            let battery = self.fetchBatteryLevel(deviceName: deviceName)
             
-            print("New device connected")
-            
-            // Qui puoi triggerare la tua notifica personalizzata
-            //BoringViewCoordinator.shared.showHeadphoneConnected(info: headphone)
+            let newHeadphone = ConnectedHeadphone(
+                name: deviceName,
+                batteryLevel: battery,
+                isApple: deviceName.lowercased().contains("airpods") || deviceName.lowercased().contains("beats")
+            )
+                
+            // 4. Aggiornamento UI
+            Task { @MainActor in
+                if self.currentHeadphone != newHeadphone {
+                    self.currentHeadphone = newHeadphone
+                    self.isHeadphoneConnected = true
+                        
+                    print("Connected Bluetooth device: \(deviceName) - Battery: \(battery ?? -1)%")
+                        
+                    BoringViewCoordinator.shared.toggleSneakPeek(
+                        type: .headphones,
+                        show: true
+                    )
+                }
+            }
         }
     }
     
@@ -114,17 +122,17 @@ class BluetoothManager: ObservableObject {
             return device.isConnected() && (device.name == deviceName || deviceName.contains(device.name))
         }) {
             
-            // Tenta di leggere la batteria standard
-            // Nota: Per AirPods complessi (Case, Left, Right) servirebbe IOKit avanzato.
-            // batteryPercentSingle da IOBluetooth è spesso sufficiente per cuffie generiche o media aggregata.
-//            if targetDevice.batteryPercentSingle > 0 {
-//                 return Int(targetDevice.batteryPercentSingle)
-//            }
-            
-            return 0
-            
-            // Alcuni device Apple espongono la batteria in modo diverso,
-            // ma batteryPercentSingle è il metodo pubblico più sicuro senza usare API Private.
+            if let level = targetDevice.value(forKey: "batteryPercentSingle") as? Int {
+                return level
+            }
+                    
+            if let level = targetDevice.value(forKey: "batteryPercentCombined") as? Int {
+                return level
+            }
+                    
+            if let level = targetDevice.value(forKey: "batteryLevel") as? Int {
+                return level
+            }
         }
         
         return nil
@@ -161,16 +169,31 @@ class BluetoothManager: ObservableObject {
     }
     
     private func getAudioDeviceName(deviceID: AudioObjectID) -> String? {
-        var name: CFString = "" as CFString
-        var addr = AudioObjectPropertyAddress(
+        var address = AudioObjectPropertyAddress(
             mSelector: kAudioObjectPropertyName,
             mScope: kAudioObjectPropertyScopeGlobal,
             mElement: kAudioObjectPropertyElementMain
         )
-        var size = UInt32(MemoryLayout<CFString>.size)
         
-        guard AudioObjectHasProperty(deviceID, &addr) else { return nil }
-        AudioObjectGetPropertyData(deviceID, &addr, 0, nil, &size, &name)
-        return name as String
+        var nameRef: CFString? = nil
+        var size = UInt32(MemoryLayout<CFString?>.size)
+        
+        let status = withUnsafeMutablePointer(to: &nameRef) { namePtr in
+            
+            return AudioObjectGetPropertyData(
+                deviceID,
+                &address,
+                0,
+                nil,
+                &size,
+                UnsafeMutableRawPointer(namePtr)
+            )
+        }
+        
+        if status == noErr, let result = nameRef {
+            return result as String
+        }
+        
+        return nil
     }
 }

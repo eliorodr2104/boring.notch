@@ -13,7 +13,7 @@ import SwiftUI
 // MARK: - Enums
 
 enum SneakContentType: String, Codable {
-    case brightness, volume, backlight, music, mic, battery, download, unknown
+    case brightness, volume, backlight, music, mic, battery, download, headphones, unknown
 }
 
 enum BrowserType: String, Codable {
@@ -22,7 +22,7 @@ enum BrowserType: String, Codable {
 
 // MARK: - Structs
 
-struct sneakPeek {
+struct sneakPeek: Equatable {
     var type  : SneakContentType = .music
     var isShow: Bool             = false
     var value : CGFloat          = 0
@@ -232,10 +232,18 @@ class BoringViewCoordinator: ObservableObject {
     func toggleSneakPeek(
         type: SneakContentType,
         show: Bool,
-        duration: TimeInterval = 1.5,
+        duration: TimeInterval = 3,
         value: CGFloat = 0,
         icon: String = ""
     ) {
+        
+        if self.sneakPeek.type == type,
+           self.sneakPeek.isShow == show,
+           self.sneakPeek.value == value,
+           self.sneakPeek.icon == icon {
+            return
+        }
+
         sneakPeekDuration = duration
         
         if type != .music {
@@ -244,11 +252,18 @@ class BoringViewCoordinator: ObservableObject {
             }
         }
         
+        sneakPeekTask?.cancel()
+        
         Task { @MainActor in
-            withAnimation(.smooth) {
-                self.sneakPeek.type  = type
-                self.sneakPeek.value = value
-                self.sneakPeek.icon  = icon
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
+                self.sneakPeek.type   = type
+                self.sneakPeek.value  = value
+                self.sneakPeek.icon   = icon
+                self.sneakPeek.isShow = show
+            }
+            
+            if show && type != .music && type != .unknown {
+                self.scheduleSneakPeekHide(after: duration)
             }
         }
 
@@ -260,35 +275,31 @@ class BoringViewCoordinator: ObservableObject {
     private var sneakPeekDuration: TimeInterval = 1.5
     private var sneakPeekTask: Task<Void, Never>?
 
-    // Helper function to manage sneakPeek timer using Swift Concurrency
     private func scheduleSneakPeekHide(after duration: TimeInterval) {
+        // Non serve cancellare qui perché l'abbiamo fatto in toggleSneakPeek,
+        // ma per sicurezza male non fa.
         sneakPeekTask?.cancel()
 
         sneakPeekTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(duration))
             guard let self = self, !Task.isCancelled else { return }
+            
             await MainActor.run {
-                withAnimation {
-                    self.toggleSneakPeek(
-                        type: .music,
-                        show: true
-                    )
-                    
-                    self.sneakPeekDuration = 1.5
-                }
+               
+                 withAnimation {
+                     self.toggleSneakPeek(
+                         type: .unknown, // Questo tipo non farà scattare il timer nel punto 3
+                         show: false     // Nascondiamo
+                     )
+                 }
+                 
+                 self.sneakPeekDuration = 1.5
             }
         }
     }
 
     @Published
-    var sneakPeek: sneakPeek = .init() {
-        didSet {
-            if sneakPeek.isShow {
-                scheduleSneakPeekHide(after: sneakPeekDuration)
-                
-            } else { sneakPeekTask?.cancel() }
-        }
-    }
+    var sneakPeek: sneakPeek = .init()
     
     @Published
     var expandingView: ExpandedItem = .init()

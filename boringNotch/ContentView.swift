@@ -15,9 +15,7 @@ import SwiftUI
 struct ContentView: View {
     
     @EnvironmentObject var viewModel: BoringViewModel
-    @ObservedObject var webcamManager = WebcamManager.shared
     @ObservedObject var coordinator = BoringViewCoordinator.shared
-    @ObservedObject var musicManager = MusicManager.shared
     @ObservedObject var bluetoothManager = BluetoothManager.shared
     
     // MARK: - State
@@ -84,10 +82,14 @@ struct ContentView: View {
                 
                 mainNotchPill
                 
-                if viewModel.chinHeight > 0 {
+                if self.viewModel.chinHeight > 0 {
                     Rectangle()
                         .fill(Color.black.opacity(0.01))
-                        .frame(width: viewModel.computedChinWidth, height: viewModel.chinHeight)
+                        .frame(
+                            width: viewModel.computedChinWidth,
+                            height: viewModel.chinHeight
+                        )
+                        .allowsHitTesting(false)
                 }
             }
             
@@ -204,12 +206,12 @@ struct ContentView: View {
             .padding(.bottom, 10).padding(.leading, 4).padding(.trailing, 8)
             
         } else if coordinator.sneakPeek.type == .music && viewModel.notchState == .closed && !viewModel.hideOnClosed && Defaults[.sneakPeekStyles] == .standard {
-            HStack(alignment: .center) {
-                Image(systemName: "music.note")
-                GeometryReader { geo in
-                    MarqueeText(.constant(musicManager.songTitle + " - " + musicManager.artistName), textColor: Defaults[.playerColorTinting] ? Color(nsColor: musicManager.avgColor).ensureMinimumBrightness(factor: 0.6) : .gray, minDuration: 1, frameWidth: geo.size.width)
-                }
-            }.foregroundStyle(.gray).padding(.bottom, 10)
+//            HStack(alignment: .center) {
+//                Image(systemName: "music.note")
+//                GeometryReader { geo in
+//                    MarqueeText(.constant(musicManager.songTitle + " - " + musicManager.artistName), textColor: Defaults[.playerColorTinting] ? Color(nsColor: musicManager.avgColor).ensureMinimumBrightness(factor: 0.6) : .gray, minDuration: 1, frameWidth: geo.size.width)
+//                }
+//            }.foregroundStyle(.gray).padding(.bottom, 10)
         }
     }
     
